@@ -41,3 +41,21 @@ def git_clone(repo_url: str, dir_path: str, dir_name: str = "git_clone") -> str:
         return f"Repository cloned successfully to {full_path}"
     except Exception as e:
         return f"Git clone failed: {e}"
+
+@mcp.tool()
+def repo_list() -> list[str]:
+    """
+    Retrieve a list of repository names for the authenticated GitHub user.
+
+    This function uses the GitHub personal access token from the environment
+    variable `GITHUB_TOKEN` to authenticate via the GitHub API. It then fetches
+    all repositories (public and private) associated with the authenticated user
+    and returns a list of their names.
+
+    Returns:
+        list[str]: A list containing the names of all repositories belonging
+                   to the authenticated user.
+    """
+    github_client = git_auth()
+    
+    return [repo.name for repo in github_client.get_user().get_repos()]
