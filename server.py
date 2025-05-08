@@ -82,3 +82,29 @@ def delete_repo(repo_name: str) -> str:
         return f"Repository '{repo_name}' deleted successfully."
     except Exception as e:
         return f"Failed to delete repository '{repo_name}': {e}"
+    
+@mcp.tool()
+def delete_repo_file(repo_name: str, file_path: str, branch: str = "main") -> str:
+    """
+    Delete a specific file from a GitHub repository branch.
+
+    Args:
+        repo_name (str): The name of the GitHub repository.
+        file_path (str): The path to the file that should be deleted.
+        branch (str, optional): The branch name where the file exists. Defaults to "main".
+
+    Returns:
+        str: A success message or the reason for failure.
+    """
+    username = os.getenv("GITHUB_USERNAME")
+    if not username:
+        return "Environment variable GITHUB_USERNAME is not set."
+
+    try:
+        github_client = git_auth()
+        repo = github_client.get_repo(f"{username}/{repo_name}")
+        contents = repo.get_contents(file_path, ref=branch)
+        repo.delete_file(contents.path, f"Deleted {file_path} from {branch}", contents.sha, branch=branch)
+        return f"File '{file_path}' deleted successfully from '{repo_name}' on branch '{branch}'."
+    except Exception as e:
+        return f"Failed to delete file: {e}"
