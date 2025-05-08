@@ -59,3 +59,26 @@ def repo_list() -> list[str]:
     github_client = git_auth()
     
     return [repo.name for repo in github_client.get_user().get_repos()]
+
+@mcp.tool()
+def delete_repo(repo_name: str) -> str:
+    """
+    Delete a GitHub repository.
+
+    Args:
+        repo_name (str): The name of the repository to delete.
+
+    Returns:
+        str: A message indicating whether the deletion was successful or failed.
+    """
+    username = os.getenv("GITHUB_USERNAME")
+    if not username:
+        return "Environment variable GITHUB_USERNAME is not set."
+
+    try:
+        github_client = git_auth()
+        repo = github_client.get_repo(f"{username}/{repo_name}")
+        repo.delete()
+        return f"Repository '{repo_name}' deleted successfully."
+    except Exception as e:
+        return f"Failed to delete repository '{repo_name}': {e}"
