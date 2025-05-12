@@ -136,3 +136,34 @@ def create_repo(repo_name: str) -> str:
 
     except Exception as e:
         return f"Failed to create repository: {str(e)}"
+    
+@mcp.tool()
+def branch_list(repo_name: str) -> str:
+    """
+    Retrieve and return the list of branches for a given GitHub repository.
+
+    Args:
+        repo_name (str): The name of the repository.
+
+    Returns:
+        str: A message containing the list of branch names, or an error message if the repository is not found or access fails.
+
+    Raises:
+        Exception: If authentication or repository retrieval fails.
+    """
+    try:
+        git_client = git_auth()
+        user = git_client.get_user()
+
+        existing_repo_names = {repo.name for repo in user.get_repos()}
+        if repo_name not in existing_repo_names:
+            return f"Repository with name '{repo_name}' does not exist."
+
+        repo = git_client.get_repo(f"{user.login}/{repo_name}")
+        branches = repo.get_branches()
+        branch_names = [branch.name for branch in branches]
+
+        return f"Branches in '{repo_name}': {', '.join(branch_names)}"
+
+    except Exception as e:
+        return f"Failed to retrieve branch list: {str(e)}"
