@@ -203,3 +203,41 @@ def create_branch(repo_name: str, branch_name: str) -> str:
 
     except Exception as e:
         return f"Failed to create branch: {str(e)}"
+    
+@mcp.tool()
+def delete_branch(repo_name: str, branch_name: str) -> str:
+    """
+    Delete a branch from the specified GitHub repository.
+
+    Args:
+        repo_name (str): The name of the repository.
+        branch_name (str): The name of the branch to delete.
+
+    Returns:
+        str: A message indicating whether the branch was deleted successfully or not.
+
+    Raises:
+        Exception: If authentication or branch deletion fails.
+    """
+    try:
+        git_client = git_auth()
+        user = git_client.get_user()
+
+        # Verify the repository exists
+        existing_repo_names = {repo.name for repo in user.get_repos()}
+        if repo_name not in existing_repo_names:
+            return f"Repository '{repo_name}' does not exist."
+
+        repo = git_client.get_repo(f"{user.login}/{repo_name}")
+
+        # Check if the branch exists
+        branch_names = [branch.name for branch in repo.get_branches()]
+        if branch_name not in branch_names:
+            return f"Branch '{branch_name}' does not exist."
+
+        # Delete the branch
+        repo.get_git_ref(f"heads/{branch_name}").delete()
+        return f"Branch '{branch_name}' deleted successfully."
+
+    except Exception as e:
+        return f"Failed to delete branch '{branch_name}': {str(e)}"
