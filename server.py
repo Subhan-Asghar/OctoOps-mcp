@@ -167,3 +167,39 @@ def branch_list(repo_name: str) -> str:
 
     except Exception as e:
         return f"Failed to retrieve branch list: {str(e)}"
+
+@mcp.tool()
+def create_branch(repo_name: str, branch_name: str) -> str:
+    """
+    Create a new branch in the specified GitHub repository.
+
+    Args:
+        repo_name (str): The name of the repository.
+        branch_name (str): The name of the branch to create.
+
+    Returns:
+        str: A message indicating whether the branch was created or already exists.
+
+    Raises:
+        Exception: If authentication or branch creation fails.
+    """
+    try:
+        git_client = git_auth()
+        user = git_client.get_user()
+
+        existing_repo_names = {repo.name for repo in user.get_repos()}
+        if repo_name not in existing_repo_names:
+            return f"Repository '{repo_name}' does not exist."
+
+        repo = git_client.get_repo(f"{user.login}/{repo_name}")
+        existing_branches = [branch.name for branch in repo.get_branches()]
+        if branch_name in existing_branches:
+            return f"Branch '{branch_name}' already exists."
+
+        source_branch = repo.get_branch("main")
+        repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=source_branch.commit.sha)
+
+        return f"Branch '{branch_name}' created successfully."
+
+    except Exception as e:
+        return f"Failed to create branch: {str(e)}"
