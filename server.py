@@ -108,3 +108,31 @@ def delete_repo_file(repo_name: str, file_path: str, branch: str = "main") -> st
         return f"File '{file_path}' deleted successfully from '{repo_name}' on branch '{branch}'."
     except Exception as e:
         return f"Failed to delete file: {e}"
+    
+@mcp.tool()
+def create_repo(repo_name: str) -> str:
+    """
+    Create a new GitHub repository using an authenticated Git client.
+
+    Args:
+        repo_name (str): The name of the repository to create.
+
+    Returns:
+        str: A success message with the repository name and URL, or a warning if the repository already exists.
+
+    Raises:
+        Exception: If authentication fails or repository creation encounters an unexpected error.
+    """
+    try:
+        git_client = git_auth()
+        user = git_client.get_user()
+
+        existing_repo_names = {repo.name for repo in user.get_repos()}
+        if repo_name in existing_repo_names:
+            return f"Repository with name '{repo_name}' already exists."
+
+        repo = user.create_repo(repo_name)
+        return f"Repository '{repo.name}' created successfully at {repo.html_url}"
+
+    except Exception as e:
+        return f"Failed to create repository: {str(e)}"
