@@ -223,21 +223,51 @@ def delete_branch(repo_name: str, branch_name: str) -> str:
         git_client = git_auth()
         user = git_client.get_user()
 
-        # Verify the repository exists
         existing_repo_names = {repo.name for repo in user.get_repos()}
         if repo_name not in existing_repo_names:
             return f"Repository '{repo_name}' does not exist."
 
         repo = git_client.get_repo(f"{user.login}/{repo_name}")
 
-        # Check if the branch exists
         branch_names = [branch.name for branch in repo.get_branches()]
         if branch_name not in branch_names:
             return f"Branch '{branch_name}' does not exist."
 
-        # Delete the branch
+
         repo.get_git_ref(f"heads/{branch_name}").delete()
         return f"Branch '{branch_name}' deleted successfully."
 
     except Exception as e:
         return f"Failed to delete branch '{branch_name}': {str(e)}"
+    
+@mcp.tool()
+def archive_repo(repo_name: str) -> str:
+    """
+    Archives a GitHub repository under the authenticated user's account.
+
+    Parameters:
+        repo_name (str): The name of the repository to archive.
+
+    Returns:
+        str: A message indicating the result of the archive operation.
+    
+    Raises:
+        GithubException: If an error occurs during the API interaction.
+    """
+    try:
+        
+        git_client = git_auth()  
+        
+        user= git_client.get_user()
+        
+        existing_repo_names = {repo.name for repo in user.get_repos()}
+        if repo_name not in existing_repo_names:
+            return f"Repository '{repo_name}' does not exist in your account."
+
+
+        repo= git_client.get_repo(f"{user.login}/{repo_name}")
+        repo.edit(archived=True)
+        return f"✅ Repository '{repo_name}' has been archived successfully."
+    
+    except Exception as e:
+        return f" Unexpected error: {str(e)}"
