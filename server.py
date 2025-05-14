@@ -303,3 +303,37 @@ def transfer_repo(repo_name: str, new_owner: str) -> str:
         return f"Failed to initiate transfer for '{repo_name}': {str(e)}"
     except Exception as e:
         return f"An unexpected error occurred: {str(e)}"
+    
+@mcp.tool()
+def add_topic(topics: list[str], repo_name: str) -> str:
+    """
+    Adds one or more topics to a specified GitHub repository.
+
+    Parameters:
+        topics (list[str]): A list of topic names to be added to the repository.
+        repo_name (str): The name of the repository (without username prefix).
+
+    Returns:
+        str: A message indicating the result of the topic addition operation.
+
+    Raises:
+        GithubException: If the GitHub API call fails.
+        UnknownObjectException: If the specified repository does not exist.
+    """
+    try:
+        git_client = git_auth()
+        user = git_client.get_user()
+
+        repo = git_client.get_repo(f"{user.login}/{repo_name}")
+        existing_topics = repo.get_topics()
+        updated_topics = list(set(existing_topics + topics))  
+        repo.replace_topics(updated_topics)
+
+        return f"Topics {topics} have been added to repository '{repo_name}'."
+
+    except UnknownObjectException:
+        return f"Repository '{repo_name}' does not exist."
+    except GithubException as e:
+        return f"Failed to add topics to '{repo_name}': {str(e)}"
+    except Exception as e:
+        return f"An unexpected error occurred: {str(e)}"
