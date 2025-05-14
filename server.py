@@ -2,6 +2,7 @@ import os
 from github import Github, Auth
 from git import Repo
 from dotenv import load_dotenv
+from github.GithubException import UnknownObjectException, GithubException
 from mcp.server.fastmcp import FastMCP
 
 # Initialize MCP Agent
@@ -241,18 +242,19 @@ def delete_branch(repo_name: str, branch_name: str) -> str:
         return f"Failed to delete branch '{branch_name}': {str(e)}"
     
 @mcp.tool()
-def archive_repo(repo_name: str) -> str:
+def archive_repo(repo_name: str,archive:bool=True) -> str:
     """
-    Archives a GitHub repository under the authenticated user's account.
+    Archives or unarchives a GitHub repository under the authenticated user's account.
 
     Parameters:
-        repo_name (str): The name of the repository to archive.
+        repo_name (str): The name of the repository to be modified.
+        archive (bool): If True, the repository will be archived; if False, it will be unarchived.
 
     Returns:
-        str: A message indicating the result of the archive operation.
+        str: A message indicating the outcome of the archive or unarchive operation.
     
     Raises:
-        GithubException: If an error occurs during the API interaction.
+        GithubException: If an error occurs during interaction with the GitHub API.
     """
     try:
         
@@ -266,8 +268,38 @@ def archive_repo(repo_name: str) -> str:
 
 
         repo= git_client.get_repo(f"{user.login}/{repo_name}")
-        repo.edit(archived=True)
-        return f"✅ Repository '{repo_name}' has been archived successfully."
+        repo.edit(archived=archive)
+        return f"Repository '{repo_name}' has been archived successfully."
     
     except Exception as e:
         return f" Unexpected error: {str(e)}"
+    
+@mcp.tool()
+def transfer_repo(repo_name: str, new_owner: str) -> str:
+    """
+    Transfers ownership of a GitHub repository to a new owner.
+
+    Parameters:
+        repo_name (str): The full name of the repository to transfer (e.g., 'username/repo_name').
+        new_owner (str): The username of the new owner to whom the repository will be transferred.
+
+    Returns:
+        str: A message indicating the result of the transfer operation.
+    
+    Raises:
+        GithubException: If the transfer operation fails due to an API issue.
+    """
+    try:
+        git_client = git_auth()  
+        user= git_client.get_user()
+        repo = git_client.get_repo(f"{user.login}/{repo_name}")
+        repo.transfer_ownership(new_owner)
+        
+        return f"Transfer initiated. Repository '{repo_name}' is being transferred to '{new_owner}'."
+    
+    except UnknownObjectException:
+        return f"Repository '{repo_name}' does not exist."
+    except GithubException as e:
+        return f"Failed to initiate transfer for '{repo_name}': {str(e)}"
+    except Exception as e:
+        return f"An unexpected error occurred: {str(e)}"
