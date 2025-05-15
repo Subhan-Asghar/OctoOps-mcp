@@ -334,3 +334,46 @@ def add_topic(topics: list[str], repo_name: str) -> str:
         return f"Failed to add topics to '{repo_name}': {str(e)}"
     except Exception as e:
         return f"An unexpected error occurred: {str(e)}"
+    
+@mcp.tool()
+def create_repo_file(
+    path: str,
+    file_name: str,
+    repo_name: str,
+    branch: str = "main",
+    commit_text: str = "Create file",
+    file_content: str = ""
+) -> str:
+    """
+    Creates a new file in a GitHub repository under the authenticated user's account.
+
+    Parameters:
+    - path (str): Relative directory path inside the repository where the file should be created.
+    - file_name (str): Name of the file to create (e.g., 'readme.md').
+    - repo_name (str): Name of the GitHub repository (must exist).
+    - branch (str): Branch name where the file should be created. Defaults to 'main'.
+    - commit_text (str): Commit message for the file creation. Defaults to 'Create file'.
+    - file_content (str): Content of the file. Defaults to an empty string.
+
+    Returns:
+    - str: Status message indicating success or describing the failure reason.
+    """
+    try:
+        github_client = git_auth()
+        user = github_client.get_user()
+        repo = github_client.get_repo(f"{user.login}/{repo_name}")
+
+        
+        normalized_path = path.strip("/").rstrip("/")
+        full_path = f"{normalized_path}/{file_name}" if normalized_path else file_name
+        repo.create_file(full_path, commit_text, file_content, branch)
+        return f"File '{full_path}' successfully created in repository '{repo_name}' on branch '{branch}'."
+
+    except UnknownObjectException:
+        return f"Repository '{repo_name}' does not exist or could not be found."
+
+    except GithubException as e:
+        return f"GitHub API error while creating file in '{repo_name}': {str(e)}"
+
+    except Exception as e:
+        return f"An unexpected error occurred: {str(e)}"
