@@ -72,12 +72,10 @@ def delete_repo(repo_name: str) -> str:
     Returns:
         str: A message indicating whether the deletion was successful or failed.
     """
-    username = os.getenv("GITHUB_USERNAME")
-    if not username:
-        return "Environment variable GITHUB_USERNAME is not set."
-
     try:
         github_client = git_auth()
+        user=github_client.get_user()
+        username=f"{user.login}"
         repo = github_client.get_repo(f"{username}/{repo_name}")
         repo.delete()
         return f"Repository '{repo_name}' deleted successfully."
@@ -97,12 +95,11 @@ def delete_repo_file(repo_name: str, file_path: str, branch: str = "main") -> st
     Returns:
         str: A success message or the reason for failure.
     """
-    username = os.getenv("GITHUB_USERNAME")
-    if not username:
-        return "Environment variable GITHUB_USERNAME is not set."
 
     try:
         github_client = git_auth()
+        user=github_client.get_user()
+        username=f"{user.login}"
         repo = github_client.get_repo(f"{username}/{repo_name}")
         contents = repo.get_contents(file_path, ref=branch)
         repo.delete_file(contents.path, f"Deleted {file_path} from {branch}", contents.sha, branch=branch)
