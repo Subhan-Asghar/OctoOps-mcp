@@ -421,3 +421,42 @@ def update_repo_file(
 
     except Exception as e:
         return f"An unexpected error occurred: {str(e)}"
+    
+@mcp.tool()
+def search_repo_file(file_name: str, repo_name: str, branch: str = "main") -> str:
+    """
+    Recursively searches for a file by name in the specified GitHub repository and branch.
+
+    Parameters:
+    - file_name (str): Name of the file to search for.
+    - repo_name (str): Name of the GitHub repository.
+    - branch (str): Branch name to search in (default is "main").
+
+    Returns:
+    - str: Full path of the file if found, or an informative error message.
+    """
+    try:
+        git_client = git_auth()
+        user = git_client.get_user()
+        repo = git_client.get_repo(f"{user.login}/{repo_name}")
+        contents = repo.get_contents("", branch)
+
+        while contents:
+            item = contents.pop(0)
+            if item.type == "dir":
+                contents.extend(repo.get_contents(item.path, branch))
+            elif item.name == file_name:
+                return f"File found: {item.path}"
+
+        return f"File '{file_name}' not found in repository '{repo_name}' on branch '{branch}'."
+
+    except UnknownObjectException:
+        return f"Repository '{repo_name}' does not exist."
+
+    except GithubException as e:
+        return f"GitHub API error while searching file in '{repo_name}': {str(e)}"
+
+    except Exception as e:
+        return f"An unexpected error occurred: {str(e)}"
+
+
