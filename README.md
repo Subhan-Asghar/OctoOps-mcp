@@ -23,11 +23,17 @@
 ```bash
 git clone https://github.com/your-username/octoops.git
 cd octoops
+
 python -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
 pip install -r requirements.txt
+```
 
 <h2>🔑 Environment Setup</h2>
+
 Create a .env file in the root directory:
-<pre> <code> GITHUB_TOKEN=your_personal_access_token_here </code> <pre>
-<h2>⚙️ Available MCP Tools</h2>
+
+```bash
+GITHUB_TOKEN=your_personal_access_token_here 
+```
